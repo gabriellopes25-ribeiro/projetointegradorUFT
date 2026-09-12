@@ -12,8 +12,6 @@ Projeto desenvolvido para a disciplina de Projeto Integrador, aplicando conceito
 | Rayssa de Oliveira Santos | 2026111525 | @rayssa-oliveira05 | rayssa.oliveira@mail.uft.edu.br | Desenvolvedora |
 
 **Repositório:** https://github.com/gabriellopes25-ribeiro/projetointegradorUFT
-**Repositório:**
-https://github.com/gabriellopes25-ribeiro/projetointegradorUFT
 
 ---
 
