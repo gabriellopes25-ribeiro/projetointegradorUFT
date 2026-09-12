@@ -8,7 +8,7 @@ Projeto desenvolvido para a disciplina de Projeto Integrador, aplicando conceito
 |------------|-----------|--------|--------|-------|
 | Adriel Morais | 2026112033 | @AadrielL | adriel.morais@mail.uft.edu.br | Product Owner (PO) |
 | Gabriel Lopes | 2026111910 | @gabriellopes25-ribeiro | gabriel.lopes1@mail.uft.edu.br | Scrum Master (SM) |
-| João Pedro Figueredo da Cunha | 2026112216 | @  | cunha.joao@mail.uft.edu.br | Desenvolvedor |
+| João Pedro Figueredo da Cunha | 2026112216 | @406561  | cunha.joao@mail.uft.edu.br | Desenvolvedor |
 | Rayssa de Oliveira Santos | 2026111525 | @rayssa-oliveira05 | rayssa.oliveira@mail.uft.edu.br | Desenvolvedora |
 
 **Repositório:** https://github.com/gabriellopes25-ribeiro/projetointegradorUFT
