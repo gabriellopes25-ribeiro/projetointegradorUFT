@@ -123,6 +123,17 @@ Branch → Commit → Push → Pull Request → Merge
 
 A participação dos integrantes será comprovada por meio do **histórico de commits e painel de contribuidores do GitHub**, conforme solicitado na atividade.
 
+**Painel de Contribuidores:**
+
+<img width="900" height="906" alt="Captura de tela 2026-09-12 104343" src="https://github.com/user-attachments/assets/d4279301-6c07-4952-8a10-594a3e6bd086" />
+
+
+**Histórico de Commits:**
+
+<img width="1459" height="726" alt="Captura de tela 2026-09-12 104750" src="https://github.com/user-attachments/assets/6acca093-7577-4c1a-8fe1-b863f10e6e6c" />
+<img width="1341" height="597" alt="Captura de tela 2026-09-12 104756" src="https://github.com/user-attachments/assets/24c6e3e2-217a-4f62-8f3e-09b2d5d2ae34" />
+
+
 ---
 
 ## Status
