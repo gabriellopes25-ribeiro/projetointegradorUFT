@@ -45,3 +45,40 @@ Esta organização em camadas ainda não possui View nem Controller. Consulte
 [MVC e camadas](mvc-e-camadas.md) para entender a relação sem confundir os
 conceitos. O [guia da equipe](README.md) reúne o espelho dos arquivos Python,
 os diagramas e as decisões pendentes do Product Owner.
+
+## Sprint 2 — Estruturas de Dados
+
+### Tabela Hash (tabela_hash.py)
+**Uso:** indexação e busca rápida de dados de contribuintes/dívida ativa.
+
+**Complexidade:**
+- Inserção: O(1) em média; O(n) no pior caso (colisões)
+- Busca: O(1) em média; O(n) no pior caso
+
+**Testes:** implementados e passando.
+
+### Heap — Fila de Cobrança (fila_cobranca.py)
+**Uso:** priorização de contribuintes a serem cobrados, por score/prioridade,
+sem precisar ordenar a lista inteira a cada consulta.
+
+**Implementação:** heap binário via módulo `heapq`, simulando max-heap ao
+armazenar `(-score, cpf)`.
+
+**Complexidade:**
+- `inserir(score, cpf)`: O(log n)
+- `proximo_a_cobrar()`: O(log n)
+- Espaço: O(n)
+
+**Testes:** 3 testes em `tests/test_fila_cobranca.py`, cobrindo fila vazia,
+ordem de prioridade e empate de score — todos passando.
+
+### Grafo (a preencher)
+**Uso:** _(descrever o que o grafo representa no sistema)_
+
+**Estrutura escolhida:** _(lista de adjacência / matriz de adjacência)_
+
+**Complexidade:**
+- Inserção de nó/aresta: _(a definir)_
+- Busca/percurso: _(a definir)_
+
+**Testes:** _(a definir)_
