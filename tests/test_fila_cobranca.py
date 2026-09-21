@@ -25,3 +25,21 @@ def test_empate_de_score_nao_quebra():
     primeiro = fila.proximo_a_cobrar()
     segundo = fila.proximo_a_cobrar()
     assert primeiro[1] == 80 and segundo[1] == 80
+
+
+def test_amostra_simulada_de_contribuintes():
+    fila = FilaCobranca()
+    contribuintes = [
+        (95, "111.111.111-11"),
+        (60, "222.222.222-22"),
+        (78, "333.333.333-33"),
+        (40, "444.444.444-44"),
+        (88, "555.555.555-55"),
+    ]
+    for score, cpf in contribuintes:
+        fila.inserir(score, cpf)
+
+    ordem_esperada = sorted(contribuintes, key=lambda x: -x[0])
+    for score_esperado, cpf_esperado in ordem_esperada:
+        resultado = fila.proximo_a_cobrar()
+        assert resultado == (cpf_esperado, score_esperado)
