@@ -126,10 +126,12 @@ projetointegradorUFT/
 │   │   ├── simulacao_service.py    # [Sprint 1] Contrato de simulação de cenários
 │   │   ├── relatorio_service.py    # [Sprint 1] Contrato de arrecadação
 │   │   └── busca_service.py        # [Sprint 2] Serviço de busca cadastral e dossiê fiscal
+│   ├── estruturas/              # [Sprint 2] Pacote de Estruturas de Dados Avançadas
+│   │   ├── __init__.py          # Exportações do pacote estruturas
+│   │   ├── tabela_hash.py       # Indexação O(1) de débitos por CPF
+│   │   ├── fila_cobranca.py     # Heap de priorização O(log n) de cobrança
+│   │   └── grafo.py             # Mapeamento de relações Contribuinte-Imóvel-Processo
 │   ├── utils/                   # [Sprint 1] Validações básicas compartilhadas
-│   ├── tabela_hash.py           # [Sprint 2] Indexação O(1) de débitos por CPF
-│   ├── fila_cobranca.py         # [Sprint 2] Heap de priorização O(log n) de cobrança
-│   ├── grafo.py                 # [Sprint 2] Mapeamento de relações Contribuinte-Imóvel-Processo
 │   └── main.py                  # [Sprint 1] Ponto de entrada e diagnóstico da estrutura
 │
 ├── tests/                       # Suíte de testes unitários e de integração
@@ -169,22 +171,24 @@ A **Sprint 2** agregou estruturas de dados eficientes, suíte abrangente de test
   * **`BancoSimuladoEmMemoria`**: Emulador de repositório em memória com índices rápidos para buscas por CPF/CNPJ e CCI.
   * **`executar_seed(model_registry, db_session)`**: Função inteligente que roda em modo simulado nos testes atuais e aceita injeção direta das classes ORM/SQLAlchemy da Rayssa no momento da integração final com o banco.
 
-#### 2. Pasta `src/` — Novas Estruturas de Dados e Serviços
-* **`tabela_hash.py` (`TabelaHashDivida`)**:
+#### 2. Pasta `src/estruturas/` (Estruturas de Dados Avançadas)
+* **`src/estruturas/tabela_hash.py` (`TabelaHashDivida`)**:
   * *O que faz:* Implementa tabela hash com tratamento de colisões para indexação e busca ultra-rápida ($O(1)$ médio) do valor de dívida ativa a partir do CPF do contribuinte.
-* **`fila_cobranca.py` (`FilaCobranca`)**:
+* **`src/estruturas/fila_cobranca.py` (`FilaCobranca`)**:
   * *O que faz:* Implementa fila de prioridade baseada em max-heap binário (usando `heapq`), priorizando automaticamente contribuintes com maior score de inadimplência em tempo logarítmico ($O(\log n)$) sem necessidade de ordenação completa da lista.
-* **`grafo.py` (`GrafoContribuintes`)**:
+* **`src/estruturas/grafo.py` (`GrafoContribuintes`)**:
   * *O que faz:* Modela um grafo por lista de adjacência (`dict[str, list[dict]]`), conectando o contribuinte aos seus respectivos imóveis e processos de execução fiscal ($O(1)$ na inserção e busca direta de adjacências).
+
+#### 3. Pasta `src/services/` (Serviços do Domínio)
 * **`src/services/busca_service.py` (`BuscaService`)**:
   * *O que faz:* Centraliza as regras de negócio para busca cadastral unificada e geração do dossiê fiscal imobiliário. Valida documentos (11 dígitos para CPF, 14 para CNPJ) e lança exceções especializadas (`DocumentoInvalidoError`, `ContribuinteNaoEncontradoError`, `ImovelNaoEncontradoError`).
 
-#### 3. Pasta `tests/` — Testes Automatizados da Sprint 2
+#### 4. Pasta `tests/` — Testes Automatizados da Sprint 2
 * **`test_tabela_hash.py`**: Validação de inserção, busca e chave não encontrada.
 * **`test_fila_cobranca.py`**: Validação de ordenação por prioridade, desempate e fila vazia.
 * **`test_busca_validacao.py`**: 13 testes cobrindo busca por CPF/CNPJ (com e sem máscara), tratamento de erros, dossiê do imóvel e simulação de injeção das models da Rayssa.
 
-#### 4. Pasta `docs/` — Integração com a Prefeitura
+#### 5. Pasta `docs/` — Integração com a Prefeitura
 * **`docs/integracao_prefeitura.md`**: Detalha a arquitetura assíncrona (`asyncio`/`aiohttp`), protocolo HTTPS com TLS 1.3, autenticação via JWT/API Key, limitação de taxa (*rate-limiting*) e conformidade com a LGPD (mascaramento de dados e trilhas imutáveis de auditoria).
 
 ---
