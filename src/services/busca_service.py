@@ -17,6 +17,7 @@ import re
 from seeds.mock_data import BancoSimuladoEmMemoria
 from src.estruturas.tabela_hash import TabelaHashDivida
 from src.estruturas.fila_cobranca import FilaCobranca
+from src.estruturas.grafo import GrafoContribuintes
 
 
 class DocumentoInvalidoError(ValueError):
@@ -146,3 +147,31 @@ class BuscaService:
         if not hasattr(self, "fila_cobranca"):
             self.montar_fila_cobranca()
         return self.fila_cobranca.proximo_a_cobrar()
+
+    def _construir_grafo(self) -> GrafoContribuintes:
+        """
+        Popula o grafo com as relações contribuinte -> imóvel -> processo,
+        permitindo identificar quando o mesmo CPF/CNPJ aparece em
+        múltiplas inscrições e processos de execução fiscal.
+        """
+        grafo = GrafoContribuintes()
+        for imovel in self.repo.imoveis.values():
+            cpf_cnpj = imovel["cpf_cnpj_proprietario"]
+            processos = self.repo.listar_processos_por_imovel(imovel["inscricao_cci"])
+            if processos:
+                for processo in processos:
+                    grafo.adicionar_relacao(cpf_cnpj, imovel["inscricao_cci"], processo["numero_processo"])
+            else:
+                grafo.adicionar_relacao(cpf_cnpj, imovel["inscricao_cci"], None)
+        self.grafo = grafo
+        return grafo
+
+    def buscar_relacionamentos(self, cpf_cnpj: str) -> List[Dict[str, Any]]:
+        """
+        Retorna todos os imóveis e processos ligados a um contribuinte —
+        útil para detectar o mesmo CPF/CNPJ em várias inscrições.
+        """
+        contribuinte = self.buscar_contribuinte(cpf_cnpj)
+        if not hasattr(self, "grafo"):
+            self._construir_grafo()
+        return self.grafo.buscar_relacionados(contribuinte["cpf_cnpj"])
