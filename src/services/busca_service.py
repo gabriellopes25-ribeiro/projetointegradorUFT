@@ -15,6 +15,9 @@ repositório/banco de dados real quando implementado pela equipe.
 from typing import Any, Dict, List, Optional
 import re
 from seeds.mock_data import BancoSimuladoEmMemoria
+from src.estruturas.tabela_hash import TabelaHashDivida
+from src.estruturas.fila_cobranca import FilaCobranca
+from src.estruturas.grafo import GrafoContribuintes
 
 
 class DocumentoInvalidoError(ValueError):
@@ -56,6 +59,7 @@ class BuscaService:
             self.repo.carregar_dados_iniciais()
         else:
             self.repo = repositorio
+        self.cache_contribuintes = TabelaHashDivida()
 
     def buscar_contribuinte(self, cpf_cnpj: str) -> Dict[str, Any]:
         """
@@ -66,13 +70,20 @@ class BuscaService:
             raise DocumentoInvalidoError("CPF/CNPJ não pode ser vazio.")
 
         # Valida se é CPF ou CNPJ válido em quantidade de dígitos
-        normalizar_documento(cpf_cnpj)
+        cpf_normalizado = normalizar_documento(cpf_cnpj)
 
+        # Primeiro consulta a cache (tabela hash) — é instantâneo
+        em_cache = self.cache_contribuintes.buscar(cpf_normalizado)
+        if em_cache != "CPF não encontrado":
+            return em_cache
+
+        # Não estava na cache: busca na base e guarda na cache pra próxima vez
         resultado = self.repo.buscar_contribuinte(cpf_cnpj)
         if not resultado:
             raise ContribuinteNaoEncontradoError(
                 f"Contribuinte com documento '{cpf_cnpj}' não foi encontrado."
             )
+        self.cache_contribuintes.inserir(cpf_normalizado, resultado)
         return resultado
 
     def buscar_imovel(self, inscricao_cci: str) -> Dict[str, Any]:
@@ -108,3 +119,59 @@ class BuscaService:
             "total_processos": len(processos),
             "processos": processos,
         }
+
+    def montar_fila_cobranca(self) -> FilaCobranca:
+        """
+        Monta a fila de cobrança priorizando contribuintes com maior valor
+        devido e com processos judiciais em andamento (que pesam mais).
+        """
+        fila = FilaCobranca()
+        for cpf, _contribuinte in self.repo.contribuintes.items():
+            imoveis = self.repo.listar_imoveis_por_contribuinte(cpf)
+            valor_total = 0.0
+            tem_processo = False
+            for imovel in imoveis:
+                dividas = self.repo.listar_dividas_por_imovel(imovel["inscricao_cci"])
+                valor_total += sum(d["valor_original"] + d["juros_multa"] for d in dividas)
+                if self.repo.listar_processos_por_imovel(imovel["inscricao_cci"]):
+                    tem_processo = True
+            if valor_total <= 0:
+                continue
+            score = valor_total + (5000 if tem_processo else 0)
+            fila.inserir(round(score, 2), cpf)
+        self.fila_cobranca = fila
+        return fila
+
+    def proximo_a_cobrar(self) -> Any:
+        """Retorna o próximo contribuinte a ser cobrado, por ordem de prioridade."""
+        if not hasattr(self, "fila_cobranca"):
+            self.montar_fila_cobranca()
+        return self.fila_cobranca.proximo_a_cobrar()
+
+    def _construir_grafo(self) -> GrafoContribuintes:
+        """
+        Popula o grafo com as relações contribuinte -> imóvel -> processo,
+        permitindo identificar quando o mesmo CPF/CNPJ aparece em
+        múltiplas inscrições e processos de execução fiscal.
+        """
+        grafo = GrafoContribuintes()
+        for imovel in self.repo.imoveis.values():
+            cpf_cnpj = imovel["cpf_cnpj_proprietario"]
+            processos = self.repo.listar_processos_por_imovel(imovel["inscricao_cci"])
+            if processos:
+                for processo in processos:
+                    grafo.adicionar_relacao(cpf_cnpj, imovel["inscricao_cci"], processo["numero_processo"])
+            else:
+                grafo.adicionar_relacao(cpf_cnpj, imovel["inscricao_cci"], None)
+        self.grafo = grafo
+        return grafo
+
+    def buscar_relacionamentos(self, cpf_cnpj: str) -> List[Dict[str, Any]]:
+        """
+        Retorna todos os imóveis e processos ligados a um contribuinte —
+        útil para detectar o mesmo CPF/CNPJ em várias inscrições.
+        """
+        contribuinte = self.buscar_contribuinte(cpf_cnpj)
+        if not hasattr(self, "grafo"):
+            self._construir_grafo()
+        return self.grafo.buscar_relacionados(contribuinte["cpf_cnpj"])
