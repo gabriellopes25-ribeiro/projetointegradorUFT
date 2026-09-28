@@ -1,4 +1,4 @@
-from src.fila_cobranca import FilaCobranca
+from src.estruturas.fila_cobranca import FilaCobranca
 
 
 def test_fila_vazia_retorna_mensagem():

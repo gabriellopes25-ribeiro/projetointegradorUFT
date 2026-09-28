@@ -1,4 +1,4 @@
-from src.tabela_hash import TabelaHashDivida
+from src.estruturas.tabela_hash import TabelaHashDivida
 
 
 def test_inserir_e_buscar_divida():

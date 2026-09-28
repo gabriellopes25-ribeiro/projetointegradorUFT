@@ -46,18 +46,18 @@ Esta organização em camadas ainda não possui View nem Controller. Consulte
 conceitos. O [guia da equipe](README.md) reúne o espelho dos arquivos Python,
 os diagramas e as decisões pendentes do Product Owner.
 
-## Sprint 2 — Estruturas de Dados
+## Sprint 2 — Pacote de Estruturas de Dados Avançadas (src/estruturas/)
 
-### Tabela Hash (tabela_hash.py)
+### Tabela Hash (src/estruturas/tabela_hash.py)
 **Uso:** indexação e busca rápida de dados de contribuintes/dívida ativa.
 
 **Complexidade:**
 - Inserção: O(1) em média; O(n) no pior caso (colisões)
 - Busca: O(1) em média; O(n) no pior caso
 
-**Testes:** implementados e passando.
+**Testes:** implementados e passando em `tests/test_tabela_hash.py`.
 
-### Heap — Fila de Cobrança (fila_cobranca.py)
+### Heap — Fila de Cobrança (src/estruturas/fila_cobranca.py)
 **Uso:** priorização de contribuintes a serem cobrados, por score/prioridade,
 sem precisar ordenar a lista inteira a cada consulta.
 
@@ -72,7 +72,7 @@ armazenar `(-score, cpf)`.
 **Testes:** 3 testes em `tests/test_fila_cobranca.py`, cobrindo fila vazia,
 ordem de prioridade e empate de score — todos passando.
 
-### Grafo de Relacionamentos Fiscais (src/grafo.py)
+### Grafo de Relacionamentos Fiscais (src/estruturas/grafo.py)
 **Responsável:** João Pedro
 
 **Uso:** Representação das conexões e vínculos cadastrais entre Contribuinte (CPF/CNPJ), Imóveis vinculados e Processos de Execução Fiscal. Permite identificar rapidamente a malha patrimonial e jurídica de um devedor.
