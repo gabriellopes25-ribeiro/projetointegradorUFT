@@ -253,4 +253,9 @@ A participação dos integrantes será comprovada por meio do **histórico de co
   * [ ] Modelagem física do banco e tabelas ORM (Rayssa)
   * [ ] Controllers MVC e interface de usuário/CLI (Gabriel e João Pedro)
   * [ ] Integração ativa com endpoints externos da prefeitura
+  
+## Esquema do Banco de Dados
+
+```text
+[ CONTRIBUINTE ] (1 : N) ──> [ IMÓVEL ] (1 : N) ──> [ DÍVIDA ] (1 : N) ──> [ PROCESSO ]
 
