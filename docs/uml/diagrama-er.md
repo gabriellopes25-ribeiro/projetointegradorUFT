@@ -12,6 +12,7 @@ erDiagram
         int id_contribuinte PK
         string cpf_cnpj UK
         string nome
+        string tipo_pessoa
         string email
         string telefone
         string endereco_correspondencia
@@ -23,6 +24,8 @@ erDiagram
         int id_contribuinte FK
         string endereco
         string bairro
+        string tipo_imovel
+        decimal valor_venal
         string cep
         decimal area_terreno
         timestamp created_at

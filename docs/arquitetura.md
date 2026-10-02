@@ -107,18 +107,21 @@ Implementa as regras de negócio para busca cadastral unificada e dossiê imobil
 ### 3. Integração com a Prefeitura (`docs/integracao_prefeitura.md`)
 Especificação formal da comunicação assíncrona, segurança com HTTPS/TLS 1.3, autenticação JWT/API Key, rate-limiting e conformidade com a LGPD (anonimização e mascaramento de dados sensíveis).
 
+### 4. Camada de Persistência Real (`src/repositories/sqlite_repository.py`)
+**Responsável:** Gabriel (adiantado da Sprint 3)
+
+Implementa o repositório que conecta o `BuscaService` ao banco de dados real (`sitrib.db`), substituindo o `BancoSimuladoEmMemoria` sem alterar nenhum código que já dependia dele:
+- **`RepositorioSQLite`**: implementa o mesmo contrato (`buscar_contribuinte`, `buscar_imovel`, `listar_dividas_por_imovel`, `listar_processos_por_imovel`, `listar_imoveis_por_contribuinte`, além das coleções `.contribuintes` e `.imoveis`), mas lendo os dados reais via `sqlite3`.
+- Testado em `tests/test_sqlite_repository.py`, incluindo testes de integração que provam que a Tabela Hash, o Heap e o Grafo funcionam sem alteração ao receber esse repositório no lugar do mock.
+
 ---
 
-## 🚀 Futuros Upgrades (Próximas Sprints / Roadmap)
+## Futuros Upgrades (Próximas Sprints / Roadmap)
 
-1. **Camada de Persistência Real (Sprint 3 — Rayssa):**
-   - Substituição do `BancoSimuladoEmMemoria` por modelos relacionais ORM (SQLAlchemy / PostgreSQL ou SQLite).
-   - Acoplamento transparente com o `seeds.mock_data.executar_seed(model_registry, db_session)`.
-2. **Controllers e Interface com Usuário (Sprint 3 — Gabriel e Equipe):**
+1. **Controllers e Interface com Usuário (Sprint 3 — Gabriel e Equipe):**
    - Criação da camada Controller no padrão MVC para intermediar chamadas entre entrada de dados e serviços (`BuscaService`, `CalculoService`).
    - Interface interativa (CLI com menus dinâmicos ou endpoints RESTful com FastAPI).
-3. **Consumo Assíncrono ao Vivo das APIs da Prefeitura:**
+2. **Consumo Assíncrono ao Vivo das APIs da Prefeitura:**
    - Implementação de cliente `aiohttp` com *circuit breaker* e retentativa exponencial (*exponential backoff*) seguindo as diretrizes de `docs/integracao_prefeitura.md`.
-4. **Dashboard de Indicadores e Projeções (RF10):**
+3. **Dashboard de Indicadores e Projeções (RF10):**
    - Agregação de métricas de arrecadação por zona fiscal e geração de gráficos de inadimplência.
-
