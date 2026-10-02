@@ -41,8 +41,8 @@ def popular_banco(conexao: sqlite3.Connection) -> None:
     id_contribuinte_por_cpf = {}
     for c in CONTRIBUINTES_SEED:
         cursor.execute(
-            "INSERT INTO contribuinte (cpf_cnpj, nome, email, telefone) VALUES (?, ?, ?, ?)",
-            (c["cpf_cnpj"], c["nome"], c["email"], c["telefone"]),
+             "INSERT INTO contribuinte (cpf_cnpj, nome, tipo_pessoa, email, telefone) VALUES (?, ?, ?, ?, ?)",
+                        (c["cpf_cnpj"], c["nome"], c.get("tipo_pessoa", "FISICA"), c["email"], c["telefone"]),
         )
         id_contribuinte_por_cpf[c["cpf_cnpj"]] = cursor.lastrowid
 
@@ -50,9 +50,8 @@ def popular_banco(conexao: sqlite3.Connection) -> None:
     for i in IMOVEIS_SEED:
         id_contribuinte = id_contribuinte_por_cpf[i["cpf_cnpj_proprietario"]]
         cursor.execute(
-            "INSERT INTO imovel (inscricao_imobiliaria, id_contribuinte, endereco, bairro, cep) VALUES (?, ?, ?, ?, ?)",
-            (i["inscricao_cci"], id_contribuinte, i["endereco"], i["bairro"], i["cep"]),
-        )
+                        "INSERT INTO imovel (inscricao_imobiliaria, id_contribuinte, endereco, bairro, cep, tipo_imovel, valor_venal) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (i["inscricao_cci"], id_contribuinte, i["endereco"], i["bairro"], i["cep"], i.get("tipo_imovel", "RESIDENCIAL"), i.get("valor_venal")),        )
         id_imovel_por_cci[i["inscricao_cci"]] = cursor.lastrowid
 
     id_divida_por_codigo = {}
