@@ -16,7 +16,7 @@ from seeds.mock_data import (
 )
 
 # Aponta corretamente para seeds/schema.sql e para a raiz do projeto para o sitrib.db
-CAMINHO_SCHEMA = Path(__file__).resolve().parent.parent / "seeds" / "schema.sql"
+CAMINHO_SCHEMA = Path(__file__).resolve().parent.parent / "schema.sql"
 CAMINHO_BANCO = Path(__file__).resolve().parent.parent / "sitrib.db"
 
 
