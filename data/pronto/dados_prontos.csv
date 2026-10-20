@@ -1,0 +1,5 @@
+codigo_debito,exercicio_ano,valor_original,juros_multa,status,inscricao_cci,cpf_cnpj_contribuinte,tipo_tributo,cpf_cnpj,nome,inscricao_imobiliaria,valor_atualizado,data_vencimento
+DEB-2023-IPTU-104,2023,2450.0,380.5,ATIVO,CCI-104-NORTE-01,123.456.789-01,IPTU,000.000.000-00,Contribuinte Nao Identificado,CCI-GERAL-00,2450.0,2024-12-31
+DEB-2022-IPTU-104,2022,2200.0,650.0,AJUIZADO,CCI-104-NORTE-01,123.456.789-01,IPTU,000.000.000-00,Contribuinte Nao Identificado,CCI-GERAL-00,2200.0,2024-12-31
+DEB-2024-ISS-JK10,2024,14800.0,1250.75,ATIVO,CCI-COMERCIAL-JK-10,12.345.678/0001-90,ISS,000.000.000-00,Contribuinte Nao Identificado,CCI-GERAL-00,14800.0,2024-12-31
+DEB-2021-TX-IND07,2021,8300.0,2400.0,AJUIZADO,CCI-LOTE-INDUSTRIAL-07,98.765.432/0001-10,TAXA_LIXO,000.000.000-00,Contribuinte Nao Identificado,CCI-GERAL-00,8300.0,2024-12-31
