@@ -116,12 +116,35 @@ Implementa o repositório que conecta o `BuscaService` ao banco de dados real (`
 
 ---
 
-## Futuros Upgrades (Próximas Sprints / Roadmap)
+---
 
-1. **Controllers e Interface com Usuário (Sprint 3 — Gabriel e Equipe):**
-   - Criação da camada Controller no padrão MVC para intermediar chamadas entre entrada de dados e serviços (`BuscaService`, `CalculoService`).
-   - Interface interativa (CLI com menus dinâmicos ou endpoints RESTful com FastAPI).
-2. **Consumo Assíncrono ao Vivo das APIs da Prefeitura:**
-   - Implementação de cliente `aiohttp` com *circuit breaker* e retentativa exponencial (*exponential backoff*) seguindo as diretrizes de `docs/integracao_prefeitura.md`.
-3. **Dashboard de Indicadores e Projeções (RF10):**
-   - Agregação de métricas de arrecadação por zona fiscal e geração de gráficos de inadimplência.
+## Sprint 3 — Pipeline ETL (Módulo 5: Coleta, Raspagem e Transformação)
+
+A Sprint 3 estabelece o fluxo de ingestão e preparação de dados em larga escala, substituindo definitivamente dados estáticos e preparando o terreno para os modelos preditivos da Sprint 4:
+
+```mermaid
+flowchart LR
+    A[API SEFIN / Portal da Transparência] -->|Coleta com Rate-limit & Backoff| B[(data/bruto/)]
+    B -->|Limpeza & Deduplicação| C[(data/limpo/)]
+    C -->|Enriquecimento IBGE + Features + LGPD| D[(data/pronto/)]
+    D -->|Carga de Dados| E[(Banco SQLite: sitrib.db)]
+    D -->|Indexação O 1 | F[TabelaHashDivida]
+    D -->|Priorização O log n | G[FilaCobranca Max-Heap]
+    D -->|EDA & Geo| H[Relatório EDA & Mapa Geoespacial]
+```
+
+### 1. Camada de Coleta (`src/coleta/coletor_prefeitura.py`)
+- **Responsável:** Gabriel Lopes (Scrum Master)
+- **Funcionalidades:** Coleta automatizada com paginação dinâmica, backoff exponencial em erros de rede (429, 500, 503) e rate-limiting estrito (máx 60 req/min). Preserva os dados brutos sem alteração em `data/bruto/` com carimbo de data/hora.
+
+### 2. Camada de Enriquecimento e Análise (`src/enriquecimento/integracao_ibge.py`)
+- **Responsável:** Rayssa de Oliveira (Desenvolvedora)
+- **Funcionalidades:** Consulta à API de Serviços do IBGE para o município de Palmas (Código: 1721000), agregando renda média e demografia por quadra. Constrói o `docs/relatorio_eda.md` com 4 visualizações descritivas, frases de leitura analítica e mapa geoespacial coroplético (`docs/mapas/mapa_inadimplencia.html`).
+
+### 3. Camada de Transformação e Privacidade (`src/transformacao/features.py`)
+- **Responsável:** Adriel Morais (Product Owner)
+- **Funcionalidades:** Engenharia de atributos (`tempo_inadimplencia_dias`, faixas de devedores 'Pequeno/Médio/Grande', sazonalidade) e conformidade integral com a LGPD (anonimização/mascaramento de CPF, CNPJ, telefones e e-mails antes de salvar em `data/pronto/`). Atualização do `README.md` com guia de reprodução do zero.
+
+### 4. Orquestração, Carga e Qualidade (`etl_sefin.py`)
+- **Responsável:** João Pedro Figueredo (Desenvolvedor)
+- **Funcionalidades:** Script unificado que orquestra todo o fluxo, trata valores ausentes e inconsistências em `data/limpo/`, exporta para `data/pronto/dados_prontos.csv` e popula a camada de persistência (`sitrib.db`) e estruturas da Sprint 2 (`TabelaHashDivida`, `FilaCobranca`). Inclui sistema de logs e suíte de testes em `tests/test_etl.py`.

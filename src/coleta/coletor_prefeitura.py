@@ -7,10 +7,10 @@ from typing import List, Dict, Any
 
 # Tenta importar o fallback das seeds
 try:
-    from seeds.mock_data import gerar_dados_simulados
+    from seeds.mock_data import obter_dividas_mock
 except ImportError:
     # Caso seja executado de subpastas
-    from ...seeds.mock_data import gerar_dados_simulados
+    from seeds.mock_data import obter_dividas_mock
 
 
 class ColetorSefinPalmas:
@@ -60,23 +60,23 @@ class ColetorSefinPalmas:
                             break
 
                         dados_coletados.extend(novos_dados)
-                        print(f"  └─ Página {pagina} coletada ({len(novos_dados)} registros).")
+                        print(f"  -> Página {pagina} coletada ({len(novos_dados)} registros).")
                         sucesso = True
                         break
 
                     # Trata códigos de erro com Exponential Backoff
                     elif response.status_code in [429, 500, 502, 503]:
                         tempo_espera = 2 ** tentativa
-                        print(f"  ⚠️ Status {response.status_code} na página {pagina}. "
+                        print(f"  [AVISO] Status {response.status_code} na página {pagina}. "
                               f"Retentativa {tentativa}/{max_retentativas} em {tempo_espera}s...")
                         time.sleep(tempo_espera)
                     else:
-                        print(f"  ❌ Erro não tratável HTTP {response.status_code} na página {pagina}.")
+                        print(f"  [ERRO] Erro não tratável HTTP {response.status_code} na página {pagina}.")
                         break
 
                 except (requests.exceptions.RequestException, Exception) as e:
                     tempo_espera = 2 ** tentativa
-                    print(f"  ⚠️ Erro de conexão ({e.__class__.__name__}). "
+                    print(f"  [AVISO] Erro de conexão ({e.__class__.__name__}). "
                           f"Retentativa {tentativa}/{max_retentativas} em {tempo_espera}s...")
                     time.sleep(tempo_espera)
 
@@ -87,7 +87,7 @@ class ColetorSefinPalmas:
                     return self._executar_fallback()
                 else:
                     # Se falhar em páginas posteriores, encerra a coleta mantendo o que já coletou
-                    print("  ❌ Encerrando paginação por falha de conexão.")
+                    print("  [ERRO] Encerrando paginação por falha de conexão.")
                     break
 
             pagina += 1
@@ -97,7 +97,7 @@ class ColetorSefinPalmas:
     def _executar_fallback(self) -> List[Dict[str, Any]]:
         """Consome a fonte alternativa local de dados em seeds/mock_data.py"""
         try:
-            return gerar_dados_simulados()
+            return obter_dividas_mock()
         except Exception as e:
             print(f"[ERRO FALLBACK] Não foi possível carregar mock_data: {e}")
             return []
