@@ -249,11 +249,78 @@ A participação dos integrantes será comprovada por meio do **histórico de co
   * [x] Serviço de busca unificada e dossiê fiscal imobiliário (`BuscaService`)
   * [x] Suíte de testes automatizados completa (20 testes passando)
   * [x] Documentação técnica de arquitetura assíncrona, segurança e LGPD
-* **Sprint 3 — Banco Relacional, Controllers e Interface:** ⏳ **Planejada (Roadmap)**
-  * [ ] Modelagem física do banco e tabelas ORM (Rayssa)
-  * [ ] Controllers MVC e interface de usuário/CLI (Gabriel e João Pedro)
-  * [ ] Integração ativa com endpoints externos da prefeitura
-  
+* **Sprint 3 — Pipeline ETL (Módulo 5: Coleta, Raspagem e Transformação):** 🚀 **Em Execução**
+  * [x] **E1 — Coleta Automatizada da API (Gabriel Lopes):** Cliente HTTP com rate-limiting (máx 60 req/min), retentativa exponencial e persistência de dados brutos em data/bruto/.
+  * [x] **E2 parcial & E3 — Enriquecimento IBGE, Relatório EDA e Mapa Geoespacial (Rayssa de Oliveira):** Indicadores socioeconômicos de Palmas/TO (Código 1721000), 4 visualizações analíticas com frases de leitura (docs/relatorio_eda.md) e mapa interativo em Folium (docs/mapas/mapa_inadimplencia.html).
+  * [x] **E2 parcial & E4 — Engenharia de Atributos, LGPD e Reprodutibilidade (Adriel Morais):** Variáveis preditivas (	empo_inadimplencia_dias, aixa_devedor, sazonalidade), score para o Max-Heap, anonimização estrita de PII (CPF/CNPJ, e-mail, telefone) e guia completo de reprodução.
+  * [ ] **E2 — Orquestrador Ponta a Ponta, Carga e Testes (João Pedro Figueredo):** Script unificado etl_sefin.py, camadas data/limpo/ e data/pronto/dados_prontos.csv, carga no SQLite sitrib.db e testes com pytest.
+
+---
+
+## Guia de Reprodutibilidade da Sprint 3 (Entregável E4)
+
+Para executar o pipeline ETL completo do zero em qualquer ambiente:
+
+### 1. Clonar o Repositório e Criar Ambiente Virtual
+
+`ash
+git clone https://github.com/gabriellopes25-ribeiro/projetointegradorUFT.git
+cd projetointegradorUFT
+python -m venv venv
+# No Windows:
+.\venv\Scripts\activate
+# No Linux/Mac:
+source venv/bin/activate
+`
+
+### 2. Instalar Dependências
+
+`ash
+pip install -r requirements.txt
+`
+
+### 3. Estrutura das Camadas de Dados
+
+O pipeline organiza o ciclo de vida dos dados em 3 camadas padronizadas:
+- data/bruto/: Dados brutos originais extraídos da API ou gerador de fallback, preservados com timestamp no formato dados_sefin_YYYYMMDD_HHMM.json.
+- data/limpo/: Dados tratados, com tipagem corrigida, remoção de duplicatas e inconsistências.
+- data/pronto/: Base consolidada final (dados_prontos.csv) enriquecida com indicadores do IBGE, variáveis de negócio (idade da dívida, faixas e score) e com todos os dados sensíveis anonimizados segundo a LGPD.
+
+### 4. Executar os Módulos do Pipeline
+
+`ash
+# 1. Coleta automatizada da API da Prefeitura de Palmas (Gabriel)
+python -m src.coleta.coletor_prefeitura
+
+# 2. Enriquecimento socioeconômico com IBGE (Rayssa)
+python -m src.enriquecimento.integracao_ibge
+
+# 3. Engenharia de atributos e anonimização LGPD (Adriel)
+python -m src.transformacao.features
+
+# 4. Orquestrador completo de ponta a ponta (João Pedro)
+python etl_sefin.py
+`
+
+### 5. Executar os Testes Automatizados
+
+`ash
+pytest
+`
+
+---
+
+## Divisão de Tarefas da Sprint 3 — Matriz de Responsabilidades
+
+| Integrante | Papel Ágil | Branch Git | Entregáveis & Foco |
+| :--- | :---: | :---: | :--- |
+| **Gabriel Lopes** | Scrum Master | eature/coleta-api-prefeitura | **E1 (25%):** Script de coleta via API REST, paginação, rate-limit e persistência de dados brutos em data/bruto/. |
+| **Rayssa de Oliveira** | Desenvolvedora | eature/ibge-eda-georreferenciamento | **E2 parcial + E3 (25%):** Enriquecimento com IBGE, Relatório de EDA descritivo com frases de leitura e Mapa Geoespacial (docs/mapas/). |
+| **Adriel Morais** | Product Owner | eature/engenharia-atributos-docs | **E2 parcial + E4 (15%):** Engenharia de atributos (eatures.py), score para Max-Heap, anonimização LGPD e documentação de reprodutibilidade no README.md. |
+| **João Pedro Figueredo** | Desenvolvedor | eature/pipeline-etl-carga | **E2 (35%):** Orquestrador etl_sefin.py, qualidade de dados, carga no banco relacional sitrib.db e testes unitários (	ests/test_etl.py). |
+
+---
+
 ## Esquema do Banco de Dados
 
 ```text
