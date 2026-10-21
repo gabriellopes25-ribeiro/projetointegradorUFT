@@ -92,6 +92,8 @@ def padronizar_colunas(df: pd.DataFrame) -> pd.DataFrame:
         "cci": "inscricao_imobiliaria",
         "inscricao": "inscricao_imobiliaria",
         "inscricao_cci": "inscricao_imobiliaria",
+        "codigo_original": "inscricao_imobiliaria",
+        "codigo": "codigo_debito",
         "ano": "exercicio_ano",
         "ano_exercicio": "exercicio_ano",
         "exercicio": "exercicio_ano",
@@ -101,9 +103,13 @@ def padronizar_colunas(df: pd.DataFrame) -> pd.DataFrame:
         "cpf_cnpj_contribuinte": "cpf_cnpj",
         "cpf_cnpj_proprietario": "cpf_cnpj",
         "valor": "valor_original",
+        "valor_arrecado_mes": "valor_original",
+        "valor_arrecado_periodo": "valor_atualizado",
         "vencimento": "data_vencimento",
         "status": "status_divida",
         "tributo": "tipo_tributo",
+        "descricao": "tipo_tributo",
+        "orgao_nome": "nome",
     }
     df = df.rename(columns=lambda c: mapeamento.get(str(c).lower().strip(), c))
     return df

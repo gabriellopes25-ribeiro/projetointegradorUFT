@@ -1,8 +1,8 @@
 # 📊 SITRIB — Relatório Integrado do Ecossistema Tributário
 
-**Data da Geração:** 2026-10-20 20:41:45  
+**Data da Geração:** 2026-10-20 21:13:15  
 **Município Alvo:** Palmas/TO  
-**Modo de Extração:** `FALLBACK (Seeds / Dívidas Simuladas)`
+**Modo de Extração:** `AO_VIVO (Portal Novo NUCLEOGOV)`
 
 ---
 
@@ -10,35 +10,38 @@
 
 | Serviço / Endpoint | URL Base | Status / Código | Modo de Coleta |
 | :--- | :--- | :---: | :---: |
-| **Portal Novo (POST)** | `https://acessoainformacao.palmas.to.gov.br/api/receitas` | `HTTP 403` | `FALLBACK (Seeds / Dívidas Simuladas)` |
-| **API Antiga (GET)** | `https://integracao.palmas.to.gov.br/apirest/notas` | `HTTP 404` | `FALLBACK (Seeds / Dívidas Simuladas)` |
+| **Portal Novo (POST)** | `https://acessoainformacao.palmas.to.gov.br/api` | `HTTP 200 OK (Ao Vivo)` | `AO_VIVO (Portal Novo NUCLEOGOV)` |
+| **API Antiga (GET)** | `http://integracao.palmas.to.gov.br/apirest/arrecadacao` | `HTTP 200 OK (Disponível)` | `AO_VIVO (Portal Novo NUCLEOGOV)` |
 | **IBGE Localidades (REST)** | `https://servicodados.ibge.gov.br/api/v1/localidades/municipios/1721000` | `200 OK` | `ONLINE` |
 
-> **Nota de Auditoria:** Modo FALLBACK (Seeds / Dívidas Simuladas): Extraídos 4 registros. IBGE Status: 200 OK.
+> **Nota de Auditoria:** Modo AO_VIVO (Portal Novo NUCLEOGOV): Extraídos 10 registros. IBGE Status: 200 OK.
 
 ---
 
 ## 2. 💰 Indicadores Gerais da Dívida Ativa
 
-- **Volume Total Devido:** `R$ 32,431.25`
-- **Quantidade de Títulos/Débitos:** `4`
-- **Valor Médio por Débito:** `R$ 8,107.81`
-- **Maior Dívida Registrada:** `R$ 16,050.75`
+- **Volume Total Devido:** `R$ 242,501,053.63`
+- **Quantidade de Títulos/Débitos:** `8`
+- **Valor Médio por Débito:** `R$ 30,312,631.70`
+- **Maior Dívida Registrada:** `R$ 60,495,521.31`
 
 ### Distribuição por Tipo de Tributo
 
 | Tipo de Tributo | Quantidade | Valor Total (R$) | Participação (%) |
 | :--- | :---: | :---: | :---: |
-| **IPTU** | 2 | R$ 5,680.50 | 17.5% |
-| **ISS** | 1 | R$ 16,050.75 | 49.5% |
-| **TAXA_LIXO** | 1 | R$ 10,700.00 | 33.0% |
+| **IMPOSTO SOBRE SERVIÇOS DE QUALQUER NATUREZA - ISSQN** | 1 | R$ 22,729,629.39 | 9.4% |
+| **IMPOSTO SOBRE SERVIÇOS DE QUALQUER NATUREZA - ISSQN - PRINCIPAL** | 1 | R$ 21,952,521.07 | 9.1% |
+| **IMPOSTOS** | 1 | R$ 31,833,381.96 | 13.1% |
+| **IMPOSTOS SOBRE A PRODUÇÃO, CIRCULAÇÃO DE MERCADORIAS E SERVIÇOS** | 1 | R$ 22,729,629.39 | 9.4% |
+| **IMPOSTOS SOBRE SERVIÇOS** | 1 | R$ 22,729,629.39 | 9.4% |
+| **IMPOSTOS, TAXAS E CONTRIBUIÇÕES DE MELHORIA** | 1 | R$ 34,019,397.02 | 14.0% |
+| **RECEITAS CORRENTES** | 1 | R$ 60,495,521.31 | 24.9% |
+| **TRANSFERÊNCIAS CORRENTES** | 1 | R$ 26,011,344.10 | 10.7% |
 
 ### Status dos Débitos
 
 | Status da Dívida | Quantidade de Títulos | Total (R$) |
 | :--- | :---: | :---: |
-| `AJUIZADO` | 2 | R$ 13,550.00 |
-| `ATIVO` | 2 | R$ 18,881.25 |
 
 ---
 
@@ -48,10 +51,11 @@ Maiores devedores priorizados pelo sistema:
 
 | Documento | Nome do Contribuinte | Tributo | Valor Devido (R$) |
 | :--- | :--- | :--- | :---: |
-| `12.345.678/0001-90` | Tocantins Engenharia e Serviços Ltda | ISS | **R$ 16,050.75** |
-| `98.765.432/0001-10` | Araguaia Comércio de Alimentos Eireli | TAXA_LIXO | **R$ 10,700.00** |
-| `123.456.789-01` | Carlos Eduardo Siqueira | IPTU | **R$ 2,850.00** |
-| `123.456.789-01` | Carlos Eduardo Siqueira | IPTU | **R$ 2,830.50** |
+| `000.000.000-00` | TESOURO MUNICIPAL | RECEITAS CORRENTES | **R$ 60,495,521.31** |
+| `000.000.000-00` | TESOURO MUNICIPAL | IMPOSTOS, TAXAS E CONTRIBUIÇÕES DE MELHORIA | **R$ 34,019,397.02** |
+| `000.000.000-00` | TESOURO MUNICIPAL | IMPOSTOS | **R$ 31,833,381.96** |
+| `000.000.000-00` | TESOURO MUNICIPAL | TRANSFERÊNCIAS CORRENTES | **R$ 26,011,344.10** |
+| `000.000.000-00` | TESOURO MUNICIPAL | IMPOSTOS SOBRE A PRODUÇÃO, CIRCULAÇÃO DE MERCADORIAS E SERVIÇOS | **R$ 22,729,629.39** |
 
 ---
 
@@ -59,8 +63,8 @@ Maiores devedores priorizados pelo sistema:
 
 - **Renda Média Domiciliar (Palmas/TO):** `R$ 3,250.50`
 - **População Estimada:** `313,349 habitantes`
-- **Razão Dívida Total / Renda Média Domiciliar:** `9.98x` a renda mensal média
-- **Impacto da Inadimplência per Capita:** `R$ 0.10` por habitante
+- **Razão Dívida Total / Renda Média Domiciliar:** `74604.23x` a renda mensal média
+- **Impacto da Inadimplência per Capita:** `R$ 773.90` por habitante
 
 ---
 
