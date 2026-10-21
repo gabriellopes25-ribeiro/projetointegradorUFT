@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 import sqlite3
 import pandas as pd
@@ -36,6 +36,11 @@ def test_persistencia_sqlite():
     cursor = conn.cursor()
     cursor.execute("SELECT cpf_cnpj, nome FROM contribuinte WHERE cpf_cnpj = '000.111.222-33'")
     resultado = cursor.fetchone()
+
+    # Limpeza para garantir isolamento e idempotência dos demais testes
+    cursor.execute("DELETE FROM contribuinte WHERE cpf_cnpj = '000.111.222-33'")
+    cursor.execute("DELETE FROM imovel WHERE inscricao_imobiliaria = 'CCI-TESTE-99'")
+    conn.commit()
     conn.close()
 
     assert resultado is not None

@@ -1,0 +1,5 @@
+codigo_debito,exercicio_ano,valor_original,juros_multa,status_divida,inscricao_imobiliaria,cpf_cnpj,tipo_tributo,nome,valor_atualizado,data_vencimento,renda_media_regiao,populacao_regiao,codigo_ibge,valor_total,faixa_devedor,tempo_inadimplencia_dias,idade_divida_anos,mes_vencimento,trimestre_vencimento,score_prioridade
+DEB-2023-IPTU-104,2023,2450.0,380.5,ATIVO,CCI-104-NORTE-01,123.456.789-01,IPTU,Carlos Eduardo Siqueira,2830.5,2024-12-31,3250.5,313349,1721000,2830.5,Pequeno devedor,658,1.8,12,4,43.55
+DEB-2022-IPTU-104,2022,2200.0,650.0,AJUIZADO,CCI-104-NORTE-01,123.456.789-01,IPTU,Carlos Eduardo Siqueira,2850.0,2024-12-31,3250.5,313349,1721000,2850.0,Pequeno devedor,658,1.8,12,4,43.57
+DEB-2024-ISS-JK10,2024,14800.0,1250.75,ATIVO,CCI-COMERCIAL-JK-10,12.345.678/0001-90,ISS,Tocantins Engenharia e Serviços Ltda,16050.75,2024-12-31,3250.5,313349,1721000,16050.75,Médio devedor,658,1.8,12,4,49.62
+DEB-2021-TX-IND07,2021,8300.0,2400.0,AJUIZADO,CCI-LOTE-INDUSTRIAL-07,98.765.432/0001-10,TAXA_LIXO,Araguaia Comércio de Alimentos Eireli,10700.0,2024-12-31,3250.5,313349,1721000,10700.0,Médio devedor,658,1.8,12,4,48.2
