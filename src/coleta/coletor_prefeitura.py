@@ -51,13 +51,25 @@ class ColetorSefinPalmasDual:
         self.diretorio_destino = os.path.join("data", "bruto")
         os.makedirs(self.diretorio_destino, exist_ok=True)
 
-    def consumir_portal_novo(self, recurso: str = "receitas", limite: int = 10) -> List[Dict[str, Any]]:
+    def consumir_portal_novo(
+        self,
+        recurso: str = "receitas",
+        limite: int = 10,
+        ano: int = 2026,
+        mes: int = None,
+        ordenar_por_valor: bool = True
+    ) -> List[Dict[str, Any]]:
         """
-        Consome dados ao vivo do Portal Novo (Nucleogov).
-        Visita primeiro a página do módulo para receber cookies de sessão e faz o POST multipart.
-        Disponibiliza mais de 180.000 registros atualizados de receitas municipais.
+        Consome dados ao vivo do Portal Novo (Nucleogov) com suporte a filtros oficiais.
+        Parâmetros:
+        - recurso: "receitas" (sgreceitas), "despesas" (sgdespesas), etc.
+        - limite: quantidade de registros a retornar (paginação "0, limite").
+        - ano: filtro do exercício (padrão: 2026).
+        - mes: filtro do mês (1 a 12) ou None para todo o ano.
+        - ordenar_por_valor: se True, ordena decrescente pelo valor arrecadado no mês.
         """
-        print(f"[COLETA - PORTAL NOVO] Inicializando sessão em {self.base_portal_novo}...")
+        filtro_desc = f"ano={ano}" + (f", mes={mes}" if mes else "")
+        print(f"[COLETA - PORTAL NOVO] Inicializando sessão em {self.base_portal_novo} (Filtros: {filtro_desc})...")
         sessao = requests.Session()
         max_retentativas = 3
 
@@ -73,14 +85,16 @@ class ColetorSefinPalmasDual:
                     timeout=30
                 )
 
-                # 2. Executa POST na API Nucleogov
-                consulta = {
-                    "k1": {
-                        "order": {},
-                        "limit": f"0, {limite}",
-                        "acao": f"sg{recurso}/listar"
-                    }
+                # 2. Monta consulta com filtros estruturados
+                ordenacao = {"valor_arrecado_mes": "DESC"} if ordenar_por_valor else {}
+                consulta_k1 = {
+                    "order": ordenacao,
+                    "limit": f"0, {limite}",
+                    "acao": f"sg{recurso}/listar",
+                    "ano": str(ano)
                 }
+                if mes is not None:
+                    consulta_k1["mes"] = f"{int(mes):02d}"
 
                 headers_post = {
                     "User-Agent": self.navegador_ua,
@@ -92,7 +106,7 @@ class ColetorSefinPalmasDual:
 
                 resposta = sessao.post(
                     f"{self.base_portal_novo}/api",
-                    data={"multi_request": "true", "params": json.dumps(consulta)},
+                    data={"multi_request": "true", "params": json.dumps({"k1": consulta_k1})},
                     headers=headers_post,
                     timeout=30,
                 )
@@ -102,7 +116,7 @@ class ColetorSefinPalmasDual:
                     k1 = dados_json.get("k1", {})
                     total_disponivel = k1.get("total", 0)
                     registros = k1.get("dados", [])
-                    print(f"  [SUCESSO AO VIVO] {len(registros)} registros coletados (Total no município: {total_disponivel}).")
+                    print(f"  [SUCESSO AO VIVO] {len(registros)} registros coletados (Total filtrado em {ano}: {total_disponivel}).")
                     return registros
                 else:
                     print(f"  [AVISO] HTTP {resposta.status_code}. Tentativa {tentativa}/{max_retentativas}...")
@@ -138,7 +152,12 @@ class ColetorSefinPalmasDual:
 
         return self._executar_fallback()
 
-    def coletar_com_diagnostico(self, limite_portal_novo: int = 10) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    def coletar_com_diagnostico(
+        self,
+        limite_portal_novo: int = 10,
+        ano: int = 2026,
+        mes: int = None
+    ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """
         Executa a coleta ao vivo e diagnostica a saúde de ambos os sistemas da Prefeitura.
         Retorna (dados_coletados, diagnostico_execucao).
@@ -154,7 +173,13 @@ class ColetorSefinPalmasDual:
         # 1. Tenta Portal Novo (NUCLEOGOV - Atualizado 2026)
         inicio = time.time()
         try:
-            dados_novos = self.consumir_portal_novo(recurso="receitas", limite=limite_portal_novo)
+            dados_novos = self.consumir_portal_novo(
+                recurso="receitas",
+                limite=limite_portal_novo,
+                ano=ano,
+                mes=mes,
+                ordenar_por_valor=True
+            )
             tempo_ms = int((time.time() - inicio) * 1000)
             if dados_novos and isinstance(dados_novos[0], dict) and "valor_arrecado_mes" in dados_novos[0]:
                 diagnostico["portal_novo"]["status"] = "HTTP 200 OK (Ao Vivo)"

@@ -42,16 +42,25 @@ def exibir_cabecalho():
     print("=" * 72)
 
 
-def sincronizar_ecossistema(executar_coleta_api: bool = True) -> tuple:
+def sincronizar_ecossistema(
+    executar_coleta_api: bool = True,
+    ano: int = 2026,
+    mes: int = 10,
+    limite: int = 20
+) -> tuple:
     """
     Executa ou valida o ciclo completo do pipeline:
     API Prefeitura -> Enriquecimento IBGE -> Features/LGPD -> Banco -> Relatórios.
     """
-    print("\n[ETAPA 1/4] Verificando APIs e Executando Pipeline ETL...")
+    print(f"\n[ETAPA 1/4] Verificando APIs e Executando Pipeline ETL (Filtro: {mes:02d}/{ano})...")
     
     # 1. Coleta e Diagnóstico com ColetorSefinPalmasDual
     coletor = ColetorSefinPalmasDual()
-    dados_brutos, diagnostico_api = coletor.coletar_com_diagnostico()
+    dados_brutos, diagnostico_api = coletor.coletar_com_diagnostico(
+        limite_portal_novo=limite,
+        ano=ano,
+        mes=mes
+    )
     
     # 2. Dados Socioeconômicos ao vivo do IBGE
     indicadores_ibge = obter_indicadores_ibge()
@@ -60,7 +69,7 @@ def sincronizar_ecossistema(executar_coleta_api: bool = True) -> tuple:
     print(f"  -> Populacao Estimada: {indicadores_ibge.get('populacao_estimada', 0):,} habitantes")
     
     # 3. Execução do pipeline ETL
-    df_ouro = executar_pipeline(executar_coletor=False)
+    df_ouro = executar_pipeline(executar_coletor=False, ano=ano, mes=mes, limite=limite)
     
     return diagnostico_api, indicadores_ibge, df_ouro
 
@@ -149,18 +158,23 @@ def gerar_e_exibir_relatorios(diagnostico_api: dict, indicadores_ibge: dict, df_
     print(f"  [Sucesso] Base consolidada CSV exportada: {caminho_csv}")
 
     # Exibição do Painel no Console
+    m_tot = rel_arrecadacao.get("mensal_totais", {})
     print("\n[ETAPA 4/4] Painel Executivo Consolidado:")
     print("-" * 72)
-    print(f"  Volume Total da Divida Ativa : R$ {rel_arrecadacao.get('total_divida', 0.0):,.2f}")
-    print(f"  Total de Titulos Cadastrados : {rel_arrecadacao.get('qtd_titulos', 0)}")
-    print(f"  Valor Medio por Titulo       : R$ {rel_arrecadacao.get('media_divida', 0.0):,.2f}")
-    print(f"  Modo de Operacao das APIs    : {rel_api.get('modo_operacao')}")
+    print(f"  Filtro de Competência        : {m_tot.get('mes_referencia', 10):02d}/{m_tot.get('ano_referencia', 2026)}")
+    print(f"  Volume Total Arrecadado Mês  : R$ {m_tot.get('total_arrecadado_mes', 0.0):,.2f}")
+    if m_tot.get("total_orcado", 0.0) > 0:
+        print(f"  Previsão Orçamentária Anual  : R$ {m_tot.get('total_orcado', 0.0):,.2f}")
+        print(f"  Taxa de Realização no Mês    : {m_tot.get('taxa_realizacao_mes_pct', 0.0):.2f}%")
+    print(f"  Total de Títulos Cadastrados : {rel_arrecadacao.get('qtd_titulos', 0)}")
+    print(f"  Valor Médio por Título       : R$ {rel_arrecadacao.get('media_divida', 0.0):,.2f}")
+    print(f"  Modo de Operação das APIs    : {rel_api.get('modo_operacao')}")
     print("-" * 72)
-    print("  Composicao por Tipo de Tributo:")
+    print("  Composição por Tipo de Tributo:")
     for trib, dados in rel_arrecadacao.get("por_tipo_tributo", {}).items():
-        print(f"    - {trib:<12}: R$ {dados.get('total', 0.0):>10,.2f} ({dados.get('percentual', 0.0):>4.1f}%) | {dados.get('quantidade')} debitos")
+        print(f"    - {trib:<35}: R$ {dados.get('total', 0.0):>12,.2f} ({dados.get('percentual', 0.0):>4.1f}%) | {dados.get('quantidade')} lançamentos")
     print("-" * 72)
-    print(f"  Impacto Socioeconomico (IBGE): R$ {rel_arrecadacao.get('socioeconomico_ibge', {}).get('impacto_per_capita', 0.0):,.2f} per capita em Palmas/TO")
+    print(f"  Impacto Socioeconômico (IBGE): R$ {rel_arrecadacao.get('socioeconomico_ibge', {}).get('impacto_per_capita', 0.0):,.2f} per capita em Palmas/TO")
     print("=" * 72)
 
 
@@ -168,7 +182,13 @@ def main():
     exibir_cabecalho()
     caminho_banco = RAIZ_PROJETO / "sitrib.db"
     
-    diagnostico_api, indicadores_ibge, df_ouro = sincronizar_ecossistema(executar_coleta_api=True)
+    # Executa a orquestração filtrando por Outubro de 2026 (mês atual) com 20 registros
+    diagnostico_api, indicadores_ibge, df_ouro = sincronizar_ecossistema(
+        executar_coleta_api=True,
+        ano=2026,
+        mes=10,
+        limite=20
+    )
     demonstrar_estruturas_dados(caminho_banco)
     gerar_e_exibir_relatorios(diagnostico_api, indicadores_ibge, df_ouro)
     

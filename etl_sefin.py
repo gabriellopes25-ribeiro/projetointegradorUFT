@@ -32,21 +32,30 @@ def inicializar_banco(conn):
         logger.info("Tabelas do banco de dados já existentes. Prosseguindo...")
 
 
-def extrair_dados(executar_coletor_ao_vivo: bool = True):
+def extrair_dados(
+    executar_coletor_ao_vivo: bool = True,
+    ano: int = 2026,
+    mes: int = 10,
+    limite: int = 25
+):
     """
     Fase de Extração Integrada:
-    1. Aciona o ColetorSefinPalmasDual para diagnosticar e tentar consumir as APIs municipais.
+    1. Aciona o ColetorSefinPalmasDual com filtros estruturados de ano e mês.
     2. Se não conseguir extrair ao vivo, utiliza dados de contingência/fallback das seeds.
     3. Retorna (DataFrame_bruto, diagnostico_coleta).
     """
-    logger.info("Iniciando fase de Extração integrada...")
+    logger.info(f"Iniciando fase de Extração integrada (ano={ano}, mes={mes}, limite={limite})...")
     diagnostico = {"modo": "ARQUIVO_LOCAL", "registros_obtidos": 0}
 
     if executar_coletor_ao_vivo:
         try:
             from src.coleta.coletor_prefeitura import ColetorSefinPalmasDual
             coletor = ColetorSefinPalmasDual()
-            dados_brutos, diagnostico = coletor.coletar_com_diagnostico()
+            dados_brutos, diagnostico = coletor.coletar_com_diagnostico(
+                limite_portal_novo=limite,
+                ano=ano,
+                mes=mes
+            )
             if dados_brutos:
                 logger.info(f"Dados brutos coletados via coletor ({len(dados_brutos)} registros, modo {diagnostico.get('modo')}).")
                 return pd.DataFrame(dados_brutos), diagnostico
@@ -169,6 +178,11 @@ def limpar_e_validar(df: pd.DataFrame) -> pd.DataFrame:
         df["data_vencimento"] = "2024-12-31"
 
     df["data_vencimento"] = pd.to_datetime(df["data_vencimento"], errors="coerce").fillna(pd.Timestamp("2024-12-31")).dt.strftime('%Y-%m-%d')
+
+    if "valor_orcado" in df.columns:
+        df["valor_orcado"] = pd.to_numeric(df["valor_orcado"], errors="coerce").fillna(0.0)
+    if "mes" in df.columns:
+        df["mes"] = pd.to_numeric(df["mes"], errors="coerce").fillna(10).astype(int)
 
     os.makedirs(os.path.dirname(CAMINHO_LIMPO), exist_ok=True)
     df.to_csv(CAMINHO_LIMPO, index=False)
@@ -378,9 +392,19 @@ def gerar_relatorios_finais(diagnostico_api: dict, df_ouro: pd.DataFrame, indica
         return None, None
 
 
-def executar_pipeline(executar_coletor: bool = True):
-    logger.info("=== INICIANDO PIPELINE ETL SITRIB ===")
-    df_bruto, diagnostico_coleta = extrair_dados(executar_coletor_ao_vivo=executar_coletor)
+def executar_pipeline(
+    executar_coletor: bool = True,
+    ano: int = 2026,
+    mes: int = 10,
+    limite: int = 25
+):
+    logger.info(f"=== INICIANDO PIPELINE ETL SITRIB (Filtro {mes:02d}/{ano}) ===")
+    df_bruto, diagnostico_coleta = extrair_dados(
+        executar_coletor_ao_vivo=executar_coletor,
+        ano=ano,
+        mes=mes,
+        limite=limite
+    )
     df_limpo = limpar_e_validar(df_bruto)
     df_ouro, indicadores_ibge = enriquecer_e_transformar(df_limpo)
     carregar_no_banco(df_ouro)

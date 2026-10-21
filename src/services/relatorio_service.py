@@ -206,6 +206,33 @@ class RelatorioFiscalService(RelatorioService):
                     "tributo": str(row.get(col_tipo, "Geral")),
                 })
 
+        # Totais Orçamentários e Execução Mensal (Filtro Mês / Ano)
+        col_mes = "mes" if "mes" in df.columns else ("mes_vencimento" if "mes_vencimento" in df.columns else None)
+        try:
+            mes_ref = int(df[col_mes].dropna().iloc[0]) if (col_mes and not df[col_mes].dropna().empty) else 10
+        except Exception:
+            mes_ref = 10
+
+        try:
+            ano_ref = int(df["exercicio_ano"].dropna().iloc[0]) if ("exercicio_ano" in df.columns and not df["exercicio_ano"].dropna().empty) else 2026
+        except Exception:
+            ano_ref = 2026
+
+        tem_orcado = "valor_orcado" in df.columns and pd.to_numeric(df["valor_orcado"], errors="coerce").fillna(0).sum() > 0
+        total_orcado = float(pd.to_numeric(df["valor_orcado"], errors="coerce").fillna(0).sum()) if tem_orcado else 0.0
+
+        total_arrecadado_mes = total_divida
+        pct_realizacao = (total_arrecadado_mes / total_orcado * 100) if total_orcado > 0 else 0.0
+
+        totais_por_mes = {}
+        if col_mes and df[col_mes].nunique() > 1:
+            agrup_mes = df.groupby(col_mes)[col_valor].agg(["sum", "count"]).reset_index()
+            for _, r in agrup_mes.iterrows():
+                totais_por_mes[str(r[col_mes])] = {
+                    "total": round(float(r["sum"]), 2),
+                    "quantidade": int(r["count"])
+                }
+
         # Cruzamento Socioeconômico com IBGE
         ibge = indicadores_ibge or {
             "renda_media_domiciliar": 3250.50,
@@ -229,6 +256,14 @@ class RelatorioFiscalService(RelatorioService):
             "por_tipo_tributo": tributos_agrupados,
             "por_status": status_agrupado,
             "maiores_devedores": maiores_devedores,
+            "mensal_totais": {
+                "mes_referencia": mes_ref,
+                "ano_referencia": ano_ref,
+                "total_orcado": round(total_orcado, 2),
+                "total_arrecadado_mes": round(total_arrecadado_mes, 2),
+                "taxa_realizacao_mes_pct": round(pct_realizacao, 2),
+                "agrupamento_meses": totais_por_mes,
+            },
             "socioeconomico_ibge": {
                 "municipio": ibge.get("municipio", "Palmas"),
                 "uf": ibge.get("uf", "TO"),
@@ -280,18 +315,22 @@ class RelatorioFiscalService(RelatorioService):
         md.append(f"| **API Antiga (GET)** | `{p_antiga.get('url', 'N/A')}` | `{p_antiga.get('status', 'N/A')}` | `{pref.get('modo', 'FALLBACK')}` |")
         md.append(f"| **IBGE Localidades (REST)** | `{ibge.get('url', 'N/A')}` | `{ibge.get('status', '200 OK')}` | `ONLINE` |")
 
+        m_totais = relatorio_arrecadacao.get("mensal_totais", {})
         md.extend([
             "",
             f"> **Nota de Auditoria:** {relatorio_api.get('resumo', 'Operação realizada com sucesso.')}",
             "",
             "---",
             "",
-            "## 2. 💰 Indicadores Gerais da Dívida Ativa",
+            "## 2. 📅 Execução Orçamentária e Arrecadação Mensal (Filtro por Mês / Totais)",
             "",
-            f"- **Volume Total Devido:** `R$ {relatorio_arrecadacao.get('total_divida', 0.0):,.2f}`",
-            f"- **Quantidade de Títulos/Débitos:** `{relatorio_arrecadacao.get('qtd_titulos', 0)}`",
-            f"- **Valor Médio por Débito:** `R$ {relatorio_arrecadacao.get('media_divida', 0.0):,.2f}`",
-            f"- **Maior Dívida Registrada:** `R$ {relatorio_arrecadacao.get('maior_divida', 0.0):,.2f}`",
+            f"- **Exercício / Mês de Competência:** `{m_totais.get('mes_referencia', 10):02d}/{m_totais.get('ano_referencia', 2026)}`",
+            f"- **Volume Total Arrecadado no Mês:** `R$ {m_totais.get('total_arrecadado_mes', 0.0):,.2f}`",
+            f"- **Previsão Orçamentária Vinculada:** `R$ {m_totais.get('total_orcado', 0.0):,.2f}`",
+            f"- **Índice de Realização da Receita:** `{m_totais.get('taxa_realizacao_mes_pct', 0.0):.2f}%`",
+            f"- **Quantidade de Títulos/Lançamentos:** `{relatorio_arrecadacao.get('qtd_titulos', 0)}`",
+            f"- **Valor Médio por Lançamento:** `R$ {relatorio_arrecadacao.get('media_divida', 0.0):,.2f}`",
+            f"- **Maior Valor Registrado:** `R$ {relatorio_arrecadacao.get('maior_divida', 0.0):,.2f}`",
             "",
             "### Distribuição por Tipo de Tributo",
             "",
