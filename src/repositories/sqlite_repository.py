@@ -193,3 +193,35 @@ class RepositorioSQLite:
                 row["inscricao_imobiliaria"]: self._imovel_para_dict(row, row["cpf_cnpj_proprietario"])
                 for row in linhas
             }
+
+    @property
+    def dividas(self) -> List[Dict[str, Any]]:
+        with self._conectar() as conexao:
+            linhas = conexao.execute(
+                """SELECT divida.*, imovel.inscricao_imobiliaria, contribuinte.cpf_cnpj AS cpf_cnpj_contribuinte
+                   FROM divida
+                   JOIN imovel ON imovel.id_imovel = divida.id_imovel
+                   JOIN contribuinte ON contribuinte.id_contribuinte = imovel.id_contribuinte"""
+            ).fetchall()
+            return [
+                self._divida_para_dict(row, row["inscricao_imobiliaria"], row["cpf_cnpj_contribuinte"])
+                for row in linhas
+            ]
+
+    @property
+    def processos(self) -> List[Dict[str, Any]]:
+        with self._conectar() as conexao:
+            linhas = conexao.execute(
+                """SELECT processo.*, divida.id_divida AS id_divida_origem,
+                          contribuinte.cpf_cnpj AS cpf_cnpj_contribuinte
+                   FROM processo
+                   JOIN divida ON divida.id_divida = processo.id_divida
+                   JOIN imovel ON imovel.id_imovel = divida.id_imovel
+                   JOIN contribuinte ON contribuinte.id_contribuinte = imovel.id_contribuinte"""
+            ).fetchall()
+            return [
+                self._processo_para_dict(
+                    row, f"DIVIDA-{row['id_divida_origem']}", row["cpf_cnpj_contribuinte"]
+                )
+                for row in linhas
+            ]

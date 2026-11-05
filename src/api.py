@@ -24,19 +24,14 @@ from src.services.busca_service import (
     ImovelNaoEncontradoError,
 )
 from src.estruturas.fila_cobranca import FilaCobranca
-from seeds.mock_data import (
-    BancoSimuladoEmMemoria,
-    CONTRIBUINTES_SEED,
-    IMOVEIS_SEED,
-    DIVIDAS_SEED,
-    PROCESSOS_SEED,
-)
+from src.repositories.sqlite_repository import RepositorioSQLite
+from scripts.popular_banco import criar_banco, popular_banco
 
 # Inicializa aplicação FastAPI
 app = FastAPI(
     title="SITRIB API - Gestão Tributária Municipal",
     version="1.0.0",
-    description="API RESTful oficial do SITRIB (Palmas/TO) para integração com o frontend desacoplado.",
+    description="API RESTful oficial do SITRIB (Palmas/TO) conectada diretamente ao SQLite persistente (sitrib.db).",
 )
 
 # Habilita CORS para o frontend (Vite na porta 5173 e qualquer host local)
@@ -48,9 +43,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Inicializa serviços e repositório
-banco = BancoSimuladoEmMemoria()
-banco.carregar_dados_iniciais()
+# Inicializa repositório persistente em SQLite (sitrib.db)
+banco = RepositorioSQLite()
 busca_service = BuscaService(repositorio=banco)
 
 
@@ -293,12 +287,14 @@ def gerar_relatorio_ecossistema():
 @app.post("/api/v1/etl/sincronizar")
 def sincronizar_dados_etl():
     """
-    Executa a recarga da base de dados e recalculação das filas e índices de dívida ativa.
+    Executa a recarga e persistência no banco SQLite (sitrib.db).
     """
-    banco.carregar_dados_iniciais()
+    conexao = criar_banco()
+    popular_banco(conexao)
+    conexao.close()
     return {
         "status": "sucesso",
-        "mensagem": "Pipeline de ETL executado com sucesso. Índices de busca e Max-Heap sincronizados.",
+        "mensagem": "Banco de dados SQLite (sitrib.db) sincronizado e persistido com sucesso!",
         "registros_carregados": {
             "contribuintes": len(banco.contribuintes),
             "imoveis": len(banco.imoveis),
