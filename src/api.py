@@ -304,6 +304,87 @@ def sincronizar_dados_etl():
     }
 
 
+
+
+# ==============================================================================
+# 8. GET /api/v1/coleta/fontes - Diagnóstico das Duas APIs da Prefeitura + IBGE
+# ==============================================================================
+@app.get("/api/v1/coleta/fontes")
+def listar_fontes_coleta():
+    """
+    Retorna as fontes de dados municipais disponíveis e suas URLs oficiais:
+    1. Portal Novo (Nucleogov - POST)
+    2. API Antiga (REST - GET com paginação)
+    3. API IBGE (Enriquecimento socioeconômico de Palmas/TO)
+    """
+    try:
+        from src.coleta.coletor_prefeitura import ColetorSefinPalmasDual
+        from src.enriquecimento.integracao_ibge import CODIGO_PALMAS_IBGE
+        coletor = ColetorSefinPalmasDual()
+        return {
+            "status": "operacional",
+            "modo_configurado": os.getenv("SITRIB_FONTE_COLETA", "dual"),
+            "fontes": {
+                "portal_novo": {
+                    "nome": "Portal da Transparência Novo (Nucleogov)",
+                    "url_base": coletor.url_portal_novo,
+                    "metodo": "POST",
+                    "finalidade": "Receitas consolidadas, despesas e lotes orçamentários",
+                },
+                "api_antiga": {
+                    "nome": "API Legada / REST SEFIN Palmas",
+                    "url_base": coletor.url_api_antiga,
+                    "metodo": "GET",
+                    "finalidade": "Consultas fiscais diretas, tributos e certidões",
+                },
+                "ibge": {
+                    "nome": "API de Serviços IBGE (Palmas/TO)",
+                    "codigo_municipio": CODIGO_PALMAS_IBGE,
+                    "metodo": "GET",
+                    "finalidade": "Enriquecimento socioeconômico (renda média e população)",
+                },
+            },
+        }
+    except Exception as err:
+        return {"status": "erro", "detalhe": str(err)}
+
+
+# ==============================================================================
+# 9. POST /api/v1/coleta/executar - Execução da Coleta com Seleção de API
+# ==============================================================================
+@app.post("/api/v1/coleta/executar")
+def executar_coleta_api(origem: str = Query("dual", pattern="^(dual|portal_novo|api_antiga)$")):
+    """
+    Executa a coleta de dados permitindo escolher a fonte:
+    - 'dual': Tenta a API Antiga e o Portal Novo com contingência inteligente.
+    - 'portal_novo': Consome exclusivamente o Portal Novo (Nucleogov).
+    - 'api_antiga': Consome exclusivamente a API Antiga da prefeitura.
+    """
+    try:
+        from src.coleta.coletor_prefeitura import ColetorSefinPalmasDual
+        coletor = ColetorSefinPalmasDual()
+
+        if origem == "portal_novo":
+            dados = coletor.consumir_portal_novo(recurso="receitas")
+            modo = "Portal Novo (Nucleogov)"
+        elif origem == "api_antiga":
+            dados = coletor.consumir_api_antiga(endpoint="notas")
+            modo = "API Antiga (REST)"
+        else:
+            dados, diag = coletor.coletar_com_diagnostico()
+            modo = diag.get("modo", "Dual (Híbrido)")
+
+        return {
+            "status": "sucesso",
+            "origem_selecionada": origem,
+            "modo_efetivo": modo,
+            "registros_obtidos": len(dados) if isinstance(dados, list) else 1,
+            "mensagem": f"Coleta realizada com sucesso via {modo}.",
+        }
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Erro na coleta via {origem}: {err}")
+
+
 # Execução standalone via python
 if __name__ == "__main__":
     import uvicorn
