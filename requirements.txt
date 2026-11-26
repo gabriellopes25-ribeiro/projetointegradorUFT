@@ -4,3 +4,9 @@ folium
 matplotlib
 seaborn
 pytest
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+scikit-learn
+joblib

@@ -226,3 +226,7 @@ data/
 sitrib.db
 *.db
 
+
+data/pgdata/
+*.checkpoint
+*.checkpoint.tmp
